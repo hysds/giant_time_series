@@ -10,6 +10,6 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        "pytest", "scripttest", "mock", "flake8"
+        "pytest", "scripttest", "mock", "flake8", "pylint"
     ]
 )

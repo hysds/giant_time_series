@@ -14,7 +14,7 @@ RUN set -ex \
  && virtualenv --system-site-packages env \ 
  && source env/bin/activate \
  && pip install --process-dependency-links -e . \
- && pytest --junit-xml=pytest_unit.xml || true \
+ && pytest --junit-xml=/tmp/pytest_unit.xml || true \
  && rm -rf /home/ops/.cache
 
 WORKDIR /home/ops

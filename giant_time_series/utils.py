@@ -1,5 +1,5 @@
 import os
 
 
-this_is_an_error():
+def test_func():
     return True

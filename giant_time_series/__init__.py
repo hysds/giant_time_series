@@ -1,3 +1,3 @@
-__version__     = "0.0.1"
-__url__         = "https://github.com/hysds/giant_time_series"
+__version__ = "0.0.1"
+__url__ = "https://github.com/hysds/giant_time_series"
 __description__ = "GIAnT time series processing of ISCEv2 interferograms"

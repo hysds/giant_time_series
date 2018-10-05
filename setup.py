@@ -10,12 +10,6 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        "pytest", "scripttest", "mock"
-    ],
-    setup_requires=[
-        "pytest-runner"
-    ],
-    tests_require=[
-        "pytest"
+        "pytest", "scripttest", "mock", "flake8"
     ]
 )

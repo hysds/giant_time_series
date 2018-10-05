@@ -15,6 +15,7 @@ RUN set -ex \
  && source env/bin/activate \
  && pip install --process-dependency-links -e . \
  && pytest --junit-xml=/tmp/pytest_unit.xml || true \
+ && flake8 . \
  && rm -rf /home/ops/.cache
 
 WORKDIR /home/ops

@@ -16,7 +16,7 @@ RUN set -ex \
  && pip install --process-dependency-links -e . \
  && pytest --junit-xml=/tmp/pytest_unit.xml || : \
  && flake8 --exclude=env --exit-zero --statistics --output-file=/tmp/flake8.log --tee \
- && pylint --ignore env --exit-zero giant_time_series tests | tee > /tmp/pylint.log \
+ && pylint --ignore env --exit-zero giant_time_series tests > /tmp/pylint.log || : \
  && rm -rf /home/ops/.cache
 
 WORKDIR /home/ops

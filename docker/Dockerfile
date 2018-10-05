@@ -14,8 +14,8 @@ RUN set -ex \
  && virtualenv --system-site-packages env \ 
  && source env/bin/activate \
  && pip install --process-dependency-links -e . \
+ && pytest --junit-xml=/tmp/pytest_unit.xml || : \
  && flake8 --exclude=env --statistics --output-file=/tmp/flake8.log --tee \
- && pytest --junit-xml=/tmp/pytest_unit.xml || true \
  && rm -rf /home/ops/.cache
 
 WORKDIR /home/ops

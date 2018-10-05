@@ -15,7 +15,7 @@ RUN set -ex \
  && source env/bin/activate \
  && pip install --process-dependency-links -e . \
  && pytest --junit-xml=/tmp/pytest_unit.xml || : \
- && pytest --cov giant_time_series --cov-report=xml || : \
+ && pytest --cov giant_time_series --cov-report=xml:/tmp/coverage.xml || : \
  && flake8 --exclude=env --exit-zero --statistics \
     --output-file=/tmp/flake8.log --tee \
  && pylint --ignore env --exit-zero --output-format \

@@ -18,15 +18,15 @@ export PATH=$BIN_PATH:$GMT_HOME/bin:$PATH
 source $PGE_PATH/env/bin/activate
 
 echo "##########################################" 1>&2
-echo -n "Running time-series generation: " 1>&2
+echo -n "Running filtered interferogram stack generation: " 1>&2
 date 1>&2
-python $BIN_PATH/create_ts_roi.py _context.json > create_ts_roi.log 2>&1
+python $BIN_PATH/create_filtered_ifg_stack.py _context.json > create_filtered_ifg_stack.log 2>&1
 STATUS=$?
-echo -n "Finished running time-series generation: " 1>&2
+echo -n "Finished running filtered interferogram stack generation: " 1>&2
 date 1>&2
 if [ $STATUS -ne 0 ]; then
-  echo "Failed to run time-series generation." 1>&2
-  cat create_ts_roi.log 1>&2
+  echo "Failed to run filtered interferogram stack generation." 1>&2
+  cat create_filtered_ifg_stack.log 1>&2
   echo "{}"
   exit $STATUS
 fi

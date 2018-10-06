@@ -1,5 +1,5 @@
 {
-  "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_ts_roi.sh",
+  "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_filtered_ifg_stack.sh",
   "params" : [
     { 
       "name": "project",

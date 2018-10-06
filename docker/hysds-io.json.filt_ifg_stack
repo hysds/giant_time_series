@@ -1,5 +1,5 @@
 {
-  "label":"GIAnT Time Series for single scene IFGs",
+  "label":"GIAnT - Create filtered single scene IFG stack",
   "submission_type":"individual",
   "allowed_accounts": [ "ops" ],
   "params" : [

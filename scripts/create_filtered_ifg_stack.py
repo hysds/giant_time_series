@@ -9,14 +9,42 @@ import traceback
 import argparse
 import json
 import logging
+import hashlib
+import shutil
+import pickle
+from subprocess import check_call
 
 from giant_time_series.filt import filter_ifgs
-from giant_time_series.utils import get_envelope
+from giant_time_series.utils import get_envelope, dataset_exists
+
+import celeryconfig as conf
 
 
 log_format = "[%(asctime)s: %(levelname)s/%(name)s/%(funcName)s] %(message)s"
 logging.basicConfig(format=log_format, level=logging.INFO)
 logger = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
+
+
+BASE_PATH = os.path.dirname(__file__)
+
+
+ID_TMPL = "filtered-ifg-stack_{project}-{startdt}Z-{enddt}Z-{hash}-{version}"
+DATASET_VERSION = "0.1"
+
+
+# read in example.rsc template
+with open(os.path.join(BASE_PATH, "example.rsc.tmpl")) as f:
+    RSC_TMPL = f.read()
+
+
+# read in prepdataxml.py template
+with open(os.path.join(BASE_PATH, "prepdataxml.py.tmpl")) as f:
+    PREPDATA_TMPL = f.read()
+
+
+# read in prepsbasxml.py template
+with open(os.path.join(BASE_PATH, "prepsbasxml.py.tmpl")) as f:
+    PREPSBAS_TMPL = f.read()
 
 
 def main(input_json_file):
@@ -33,7 +61,10 @@ def main(input_json_file):
         input_json = json.load(f)
     logger.info("input_json: {}".format(json.dumps(input_json, indent=2)))
 
-    ## get ifg products
+    # get project
+    project = input_json['project']
+
+    # get ifg products
     products = input_json['products']
 
     # get region of interest
@@ -42,7 +73,7 @@ def main(input_json_file):
         min_lat, max_lat, min_lon, max_lon = input_json['region_of_interest']
     else:
         logger.info("Running Time Series on full data")
-        min_lon, max_lon, min_lat, max_lat = ts_common.get_envelope(input_json['products'])
+        min_lon, max_lon, min_lat, max_lat = get_envelope(input_json['products'])
         logger.info("env: {} {} {} {}".format(min_lon, max_lon, min_lat, max_lat))
 
     # get reference point in radar coordinates and length/width for box
@@ -73,10 +104,103 @@ def main(input_json_file):
     ## get subswath
     subswath = input_json['subswath']
 
+    # filter interferogram stack
     filt_info = filter_ifgs(products, min_lat, max_lat, min_lon, max_lon,
                             ref_lat, ref_lon, ref_width, ref_height, covth,
                             cohth, range_pixel_size, azimuth_pixel_size,
                             inc, filt, netramp, gpsramp, subswath)
+
+    # dump filter info
+    with open('filt_info.pkl', 'wb') as f:
+        pickle.dump(filt_info, f)
+
+    # get info
+    center_lines_utc = filt_info['center_lines_utc']
+    ifg_info = filt_info['ifg_info']
+    ifg_coverage = filt_info['ifg_coverage']
+
+    # print status after filtering
+    logger.info("After filtering: {} out of {} will be used for GIAnT processing".format(
+                len(ifg_info), len(products)))
+
+    # croak no products passed filters
+    if len(ifg_info) == 0:
+        raise RuntimeError("All products in the stack were filtered out. Check thresholds.")
+
+    # get sorted ifg date list
+    ifg_list = sorted(ifg_info)
+
+    # get endpoint configurations
+    es_url = conf.GRQ_ES_URL
+    es_index = conf.DATASET_ALIAS
+    logger.info("GRQ url: {}".format(es_url))
+    logger.info("GRQ index: {}".format(es_index))
+
+    # get hash of all params
+    m = hashlib.new('md5')
+    m.update("{} {} {} {}".format(min_lon, max_lon, min_lat, max_lat).encode('utf-8'))
+    m.update("{} {}".format(*input_json['ref_point']).encode('utf-8'))
+    m.update("{} {}".format(*input_json['ref_box_num_pixels']).encode('utf-8'))
+    m.update("{}".format(cohth).encode('utf-8'))
+    m.update("{}".format(range_pixel_size).encode('utf-8'))
+    m.update("{}".format(azimuth_pixel_size).encode('utf-8'))
+    m.update("{}".format(inc).encode('utf-8'))
+    m.update("{}".format(netramp).encode('utf-8'))
+    m.update("{}".format(gpsramp).encode('utf-8'))
+    m.update("{}".format(filt).encode('utf-8'))
+    m.update(" ".join(ifg_list).encode('utf-8'))
+    roi_ref_hash = m.hexdigest()[0:5]
+
+    # get time series product ID
+    center_lines_utc.sort()
+    id = ID_TMPL.format(project=project.replace(' ', '_'),
+                        startdt=center_lines_utc[0].strftime('%Y%m%dT%H%M%S'),
+                        enddt=center_lines_utc[-1].strftime('%Y%m%dT%H%M%S'),
+                        hash=roi_ref_hash, version=DATASET_VERSION)
+    logger.info("Product ID for version {}: {}".format(DATASET_VERSION, id))
+
+    # check if time-series already exists
+    if dataset_exists(es_url, es_index, id):
+        logger.info("{} was previously generated and exists in GRQ database.".format(id))
+
+    # write ifg.list
+    with open ('ifg.list', 'w') as f:
+        for i, dt_id in enumerate(ifg_list):
+            logger.info("{start_dt} {stop_dt} {bperp:7.2f} {sensor} {width} {length} {wavelength} {heading_deg} {center_line_utc} {xlim} {ylim} {rxlim} {rylim}\n".format(**ifg_info[dt_id]))
+            f.write("{start_dt} {stop_dt} {bperp:7.2f} {sensor}\n".format(**ifg_info[dt_id]))
+
+            # write input files on first ifg
+            if i == 0:
+                # write example.rsc
+                with open('example.rsc', 'w') as g:
+                    g.write(RSC_TMPL.format(**ifg_info[dt_id]))
+
+                # write prepdataxml.py
+                with open('prepdataxml.py', 'w') as g:
+                    g.write(PREPDATA_TMPL.format(**ifg_info[dt_id]))
+
+                # write prepsbasxml.py
+                with open('prepsbasxml.py', 'w') as g:
+                    g.write(PREPSBAS_TMPL.format(nvalid=len(ifg_list), **ifg_info[dt_id]))
+
+    # copy userfn.py
+    shutil.copy(os.path.join(BASE_PATH, "userfn.py"), "userfn.py")
+
+    # create data.xml
+    logger.info("Running step 1: prepdataxml.py")
+    check_call("python2 prepdataxml.py", shell=True)
+
+    # prepare interferogram stack
+    logger.info("Running step 2: PrepIgramStack.py")
+    check_call("{}/PrepIgramStackWrapper.py".format(BASE_PATH), shell=True)
+
+    # create sbas.xml
+    logger.info("Running step 3: prepsbasxml.py")
+    check_call("python2 prepsbasxml.py", shell=True)
+
+    # stack preprocessing: apply atmospheric corrections and estimate residual orbit errors
+    logger.info("Running step 4: ProcessStack.py")
+    check_call("{}/ProcessStackWrapper.py".format(BASE_PATH), shell=True)
 
 
 if __name__ == '__main__':

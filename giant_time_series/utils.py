@@ -5,6 +5,7 @@ import h5py
 import json
 import re
 import datetime
+import requests
 import numpy as np
 import scipy.spatial
 from osgeo import gdal, ogr
@@ -147,3 +148,43 @@ def gdal_translate(vrt_in, vrt_out, min_lat, max_lat, min_lon, max_lon, no_data,
     cmd_tmpl = "gdal_translate -of VRT -a_nodata {} -projwin {} {} {} {} -b {} {} {}"
     return check_call(cmd_tmpl.format(no_data, min_lon, max_lat, max_lon,
                                       min_lat, band, vrt_in, vrt_out), shell=True)
+
+
+def check_dataset(es_url, es_index, id):
+    """Query for dataset with specified input ID."""
+
+    query = {
+        "query":{
+            "bool":{
+                "must":[
+                    {"term":{"id":id}},
+                ]
+            }
+        },
+        "fields": [],
+    }
+
+    if es_url.endswith('/'):
+        search_url = '%s%s/_search' % (es_url, es_index)
+    else:
+        search_url = '%s/%s/_search' % (es_url, es_index)
+    r = requests.post(search_url, data=json.dumps(query))
+    if r.status_code != 200:
+        logger.info("Failed to query {}:\n{}".format(es_url, r.text))
+        logger.info("query: {}".format(json.dumps(query, indent=2)))
+        logger.info("returned: {}".format(r.text))
+    r.raise_for_status()
+    result = r.json()
+    logger.info('dedup check: {}'.format(json.dumps(result, indent=2)))
+    total = result['hits']['total']
+    if total == 0: id = 'NONE'
+    else: id = result['hits']['hits'][0]['_id']
+    return total, id
+
+
+def dataset_exists(es_url, es_index, id):
+    """Check if dataset exists in GRQ."""
+
+    total, id = check_dataset(es_url, es_index, id)
+    if total > 0: return True
+    return False

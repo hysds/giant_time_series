@@ -38,7 +38,7 @@ SENSORS = {
 
 def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
                 ref_lon, ref_width, ref_height, covth, cohth, range_pixel_size,
-                azimuth_pixel_size, inc, filt, netramp, gpsramp, subswath=None):
+                azimuth_pixel_size, inc, filt, netramp, gpsramp, subswath):
     """Filter input interferogram products."""
 
     # align images
@@ -57,19 +57,25 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
             ifg_met = json.load(f)
 
         # filter out product from different subswath
-        swath = ifg_met['swath'][0] if isinstance(ifg_met['swath'], list) else ifg_met['swath']
-        if swath != subswath:
+        swath = ifg_met['swath'] if isinstance(ifg_met['swath'], list) else [ ifg_met['swath'] ]
+        if set(swath) != set(subswath):
             logger.info('Filtered out {}: unmatched subswath {}'.format(ifg_prod,
                         ifg_met['swath']))
             continue
 
         # extract sensing start and stop dates
-        match = DT_RE.search(ifg_met['sensingStart'])
+        sensingStarts = ifg_met['sensingStart'] if isinstance(ifg_met['sensingStart'], list) else [ ifg_met['sensingStart'] ]
+        sensingStarts.sort()
+        match = DT_RE.search(sensingStarts[0])
         if not match: raise RuntimeError("Failed to extract start date.")
-        start_dt = ''.join(match.groups())
-        match = DT_RE.search(ifg_met['sensingStop'])
+        start_dt = ''.join(match.groups()[:3])
+        start_time = datetime.strptime(sensingStarts[0], "%Y-%m-%dT%H:%M:%S")
+        sensingStops = ifg_met['sensingStop'] if isinstance(ifg_met['sensingStop'], list) else [ ifg_met['sensingStop'] ]
+        sensingStops.sort()
+        match = DT_RE.search(sensingStops[-1])
         if not match: raise RuntimeError("Failed to extract stop date.")
-        stop_dt = ''.join(match.groups())
+        stop_dt = ''.join(match.groups()[:3])
+        stop_time = datetime.strptime(sensingStops[-1], "%Y-%m-%dT%H:%M:%S")
         logger.info('start_dt: {}'.format(start_dt))
         logger.info('stop_dt: {}'.format(stop_dt))
 
@@ -96,6 +102,39 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
         elif sensor == "SMAP": no_data = -9999.
         else:
             raise RuntimeError("Unknown sensor: {}".format(sensor))
+
+        # get wavelength, heading degree and center line UTC
+        ifg_xml = os.path.join(ifg_prod, "fine_interferogram.xml")
+        if os.path.exists(ifg_xml):
+            pm = PM()
+            pm.configure()
+            ifg_obj = pm.loadProduct(ifg_xml)
+            wavelength = ifg_obj.bursts[0].radarWavelength
+            sensing_mid = ifg_obj.bursts[0].sensingMid
+            heading_deg = ifg_obj.bursts[0].orbit.getENUHeading(sensing_mid)
+            center_line_utc = int((sensing_mid - datetime(year=sensing_mid.year,
+                                                          month=sensing_mid.month,
+                                                          day=sensing_mid.day)).total_seconds())
+        else:
+            # set sensing mid and centerline
+            sensing_mid = start_time + timedelta(seconds=(stop_time-start_time).total_seconds()/3.)
+            center_line_utc = int((sensing_mid - datetime(year=sensing_mid.year,
+                                                          month=sensing_mid.month,
+                                                          day=sensing_mid.day)).total_seconds())
+
+            # set wavelength and no data value
+            if sensor == "S1":
+                wavelength = 0.05546576
+                if direction == "ascending":
+                    heading_deg = -13.0
+                else:
+                    heading_deg = -167.0
+            elif sensor == "SMAP":
+                wavelength = 0.05546576 # change with actual
+                heading_deg = 0 # change with actual
+            else:
+                raise RuntimeError("Unknown sensor: {}".format(sensor))
+
 
         # project unwrapped phase and correlation products to common region_of_interest bbox (ROI)
         unw_vrt_in = os.path.join(ifg_prod, "merged", "filt_topophase.unw.geo.vrt")
@@ -167,17 +206,6 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
                         ifg_prod, cov, covth))
             continue
 
-        # get wavelength, heading degree and center line UTC
-        ifg_xml = os.path.join(ifg_prod, "fine_interferogram.xml")
-        pm = PM()
-        pm.configure()
-        ifg_obj = pm.loadProduct(ifg_xml)
-        wavelength = ifg_obj.bursts[0].radarWavelength
-        sensing_mid = ifg_obj.bursts[0].sensingMid
-        heading_deg = ifg_obj.bursts[0].orbit.getENUHeading(sensing_mid)
-        center_line_utc = int((sensing_mid - datetime(year=sensing_mid.year,
-                                                      month=sensing_mid.month,
-                                                      day=sensing_mid.day)).total_seconds())
         # track sensing mid
         center_lines_utc.append(sensing_mid)
 

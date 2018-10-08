@@ -9,6 +9,14 @@
       "type": "enum",
       "enumerables": ["aria", "grfn", "mem", "urgent-response", "dwr", "chevron", "floodmap"]
     },
+    {
+      "name": "subswath",
+      "from": "submitter",
+      "type": "enum",
+      "default": "1 2 3",
+      "enumerables": ["1 2 3", "1 2", "2 3"],
+      "lambda":"lambda val: [int(x.strip('[], \t')) for x in val.replace(',', ' ').split()]"
+    },
     { 
       "name": "region_of_interest",
       "from": "submitter",

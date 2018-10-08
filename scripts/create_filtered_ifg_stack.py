@@ -107,8 +107,10 @@ def main(input_json_file):
     netramp = input_json['netramp']
     gpsramp = input_json['gpsramp']
 
-    ## get subswath
-    subswath = input_json['subswath']
+    # get subswath
+    if isinstance(input_json['subswath'], list): 
+        subswath = input_json['subswath']
+    else: subswath = [ input_json['subswath'] ]
 
     # filter interferogram stack
     filt_info = filter_ifgs(products, min_lat, max_lat, min_lon, max_lon,

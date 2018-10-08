@@ -12,8 +12,8 @@
     { 
       "name": "subswath",
       "from": "submitter",
-      "type": "number",
-      "lambda":"lambda x: int(x)"
+      "type": "enum",
+      "enumerables": ["1", "2", "3"]
     },
     { 
       "name": "region_of_interest",

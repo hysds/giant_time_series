@@ -26,6 +26,15 @@ logger = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 DT_RE = re.compile(r'^(\d{4})-(\d{2})-(\d{2})')
 S1_RE = re.compile(r'^S1\w$')
 
+PLATFORMS = {
+    "S1A": "Sentinel-1A",
+    "S1B": "Sentinel-1B",
+}
+
+SENSORS = {
+    "S1": "SAR-C Sentinel1",
+    "SMAP": "SMAP Sensor",
+}
 
 def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
                 ref_lon, ref_width, ref_height, covth, cohth, range_pixel_size,
@@ -76,6 +85,9 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
         if sensor is None:
             logger.warn("{} will be thrown out. Failed to extract sensor".format(ifg_prod))
             continue
+
+        # set platform
+        platform = PLATFORMS.get(sensor, None)
 
         # set no data value
         if S1_RE.search(sensor):
@@ -193,6 +205,8 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
             'stop_dt': stop_dt,
             'bperp': bperp,
             'sensor': sensor,
+            'sensor_name': SENSORS[sensor],
+            'platform': platform,
             'width': width,
             'length': length,
             'xlim': xlim,

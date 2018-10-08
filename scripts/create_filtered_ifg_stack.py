@@ -5,6 +5,7 @@ Filtered single scene interferogram stack generator.
 
 import os
 import sys
+import re
 import traceback
 import argparse
 import json
@@ -12,10 +13,14 @@ import logging
 import hashlib
 import shutil
 import pickle
+import h5py
 from subprocess import check_call
+from datetime import datetime
+from glob import glob
 
 from giant_time_series.filt import filter_ifgs
-from giant_time_series.utils import get_envelope, dataset_exists
+from giant_time_series.utils import (get_envelope, dataset_exists, call_noerr,
+write_dataset_json)
 
 import celeryconfig as conf
 
@@ -28,8 +33,9 @@ logger = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 BASE_PATH = os.path.dirname(__file__)
 
 
-ID_TMPL = "filtered-ifg-stack_{project}-{startdt}Z-{enddt}Z-{hash}-{version}"
-DATASET_VERSION = "0.1"
+ID_TMPL = "filtered-ifg-stack_{sensor}-TN{track}-{startdt}Z-{enddt}Z-{hash}-{version}"
+TN_RE = re.compile(r'_TN(\d+)_')
+DATASET_VERSION = "v0.1"
 
 
 # read in example.rsc template
@@ -130,6 +136,23 @@ def main(input_json_file):
     # get sorted ifg date list
     ifg_list = sorted(ifg_info)
 
+    # get track number
+    track = int(TN_RE.search(ifg_info[ifg_list[0]]['product']).group(1))
+    logger.info("Track: {}".format(track))
+
+    # get sensor
+    sensor = ifg_info[ifg_list[0]]['sensor']
+    sensor_name = ifg_info[ifg_list[0]]['sensor_name']
+    logger.info("Sensor: {}".format(sensor))
+    logger.info("Sensor name: {}".format(sensor_name))
+
+    # get platforms
+    platform = set()
+    for i in ifg_list:
+        p = ifg_info[i]['platform']
+        if p is not None: platform.add(p)
+    platform = list(platform)
+
     # get endpoint configurations
     es_url = conf.GRQ_ES_URL
     es_index = conf.DATASET_ALIAS
@@ -148,12 +171,15 @@ def main(input_json_file):
     m.update("{}".format(netramp).encode('utf-8'))
     m.update("{}".format(gpsramp).encode('utf-8'))
     m.update("{}".format(filt).encode('utf-8'))
+    m.update("{}".format(track).encode('utf-8'))
+    m.update("{}".format(sensor).encode('utf-8'))
+    m.update(" ".join(platform).encode('utf-8'))
     m.update(" ".join(ifg_list).encode('utf-8'))
     roi_ref_hash = m.hexdigest()[0:5]
 
     # get time series product ID
     center_lines_utc.sort()
-    id = ID_TMPL.format(project=project.replace(' ', '_'),
+    id = ID_TMPL.format(sensor=sensor, track=track,
                         startdt=center_lines_utc[0].strftime('%Y%m%dT%H%M%S'),
                         enddt=center_lines_utc[-1].strftime('%Y%m%dT%H%M%S'),
                         hash=roi_ref_hash, version=DATASET_VERSION)
@@ -162,6 +188,7 @@ def main(input_json_file):
     # check if time-series already exists
     if dataset_exists(es_url, es_index, id):
         logger.info("{} was previously generated and exists in GRQ database.".format(id))
+        sys.exit(0)
 
     # write ifg.list
     with open ('ifg.list', 'w') as f:
@@ -201,6 +228,86 @@ def main(input_json_file):
     # stack preprocessing: apply atmospheric corrections and estimate residual orbit errors
     logger.info("Running step 4: ProcessStack.py")
     check_call("{}/ProcessStackWrapper.py".format(BASE_PATH), shell=True)
+
+    # extract timestep dates
+    proc_stack = os.path.join(cwd, 'Stack', 'PROC-STACK.h5')
+    h5f = h5py.File(proc_stack, 'r')
+    times = h5f.get('dates')[:]
+    h5f.close()
+    timesteps = [datetime.fromordinal(int(i)).isoformat('T') for i in times[:]]
+
+    # create product directory
+    prod_dir = id
+    os.makedirs(prod_dir, 0o755)
+
+    # move and compress HDF5 products
+    prod_files = glob("Stack/*")
+    for i in prod_files:
+        shutil.move(i, prod_dir)
+        check_call("pigz -f -9 {}".format(os.path.join(prod_dir, os.path.basename(i))), shell=True)
+
+    # create browse image
+    png_files = glob("Figs/Igrams/*.png")
+    shutil.copyfile(png_files[0], os.path.join(prod_dir, "browse.png"))
+    call_noerr("convert -resize 250x250 {} {}".format(png_files[0],
+               os.path.join(prod_dir, "browse_small.png")))
+
+    # copy pngs
+    for i in png_files: shutil.move(i, prod_dir)
+
+    # save other files to product directory
+    shutil.copyfile(input_json_file, os.path.join(prod_dir,"{}.context.json".format(id)))
+    shutil.move("filt_info.pkl", prod_dir)
+    shutil.move("data.xml", prod_dir)
+    shutil.move("example.rsc", prod_dir)
+    shutil.move("ifg.list", prod_dir)
+    shutil.move("prepdataxml.py", prod_dir)
+    shutil.move("prepsbasxml.py", prod_dir)
+    shutil.move("sbas.xml", prod_dir)
+    shutil.move("userfn.py", prod_dir)
+
+    # create met json
+    met = {
+        "bbox": [
+            [ max_lat, max_lon ],
+            [ max_lat, min_lon ],
+            [ min_lat, min_lon ],
+            [ min_lat, max_lon ],
+            [ max_lat, max_lon ],
+        ],
+        "dataset_type": "ifg-stack",
+        "product_type": "ifg-stack",
+        "reference": False,
+        "sensing_time_initial": timesteps[0],
+        "sensing_time_final": timesteps[-1],
+        "sensor": sensor_name,
+        "platform": platform,
+        "spacecraftName": platform,
+        "tags": [ input_json['project'] ],
+        "trackNumber": track,
+        "swath": input_json['subswath'],
+        "ifg_count": len(ifg_info),
+        "ifgs": [ifg_info[i]['product'] for i in sorted(ifg_info)],
+        "timestep_count": len(timesteps),
+        "timesteps": timesteps,
+    }
+    met_file = os.path.join(prod_dir, "{}.met.json".format(id))
+    with open(met_file, 'w') as f:
+        json.dump(met, f, indent=2)
+
+    # create dataset json
+    geojson_bbox = [
+        [ max_lon, max_lat ],
+        [ max_lon, min_lat ],
+        [ min_lon, min_lat ],
+        [ min_lon, max_lat ],
+        [ max_lon, max_lat ],
+    ]
+    write_dataset_json(prod_dir, id, geojson_bbox, timesteps[0], timesteps[-1], DATASET_VERSION)
+
+    # clean out SAFE directories and symlinks
+    for i in input_json['products']: shutil.rmtree(i)
+    for i in ifg_list: os.unlink(i)
 
 
 if __name__ == '__main__':

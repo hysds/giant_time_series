@@ -97,18 +97,7 @@ def get_bperp(catalog):
     raise RuntimeError("Failed to find perpendicular baseline.")
 
 
-def get_version():
-    """Get dataset version."""
-
-    DS_VERS_CFG = os.path.normpath(os.path.join(
-                          os.path.dirname(os.path.abspath(__file__)),
-                          '..', 'conf', 'dataset_versions.json'))
-    with open(DS_VERS_CFG) as f:
-        ds_vers = json.load(f)
-    return ds_vers['TS']
-
-
-def write_dataset_json(prod_dir,id,region,starttime,endtime):
+def write_dataset_json(prod_dir, id, region, starttime, endtime, version):
     '''
     Write a dataset JSON file for TS
     @param prod_dir: product directory
@@ -119,7 +108,7 @@ def write_dataset_json(prod_dir,id,region,starttime,endtime):
     '''
     met = {
         'creation_timestamp': "%sZ" % datetime.datetime.utcnow().isoformat(),
-        'version': get_version(),
+        'version': version,
         'label': id,
         'location': {
             "type": "Polygon",
@@ -157,13 +146,14 @@ def check_dataset(es_url, es_index, id):
         "query":{
             "bool":{
                 "must":[
-                    {"term":{"id":id}},
+                    {"term":{"_id":id}},
                 ]
             }
         },
         "fields": [],
     }
 
+    logger.info("query:\n{}".format(json.dumps(query, indent=2)))
     if es_url.endswith('/'):
         search_url = '%s%s/_search' % (es_url, es_index)
     else:

@@ -7,7 +7,7 @@ import numpy as np
 from osgeo import gdal
 from gdalconst import GA_ReadOnly
 from glob import glob
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import isce
 from iscesys.Component.ProductManager import ProductManager as PM
@@ -81,19 +81,30 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
 
         # extract perpendicular baseline and sensor for ifg.list input file
         cb_pkl = os.path.join(ifg_prod, "PICKLE", "computeBaselines")
-        with open(cb_pkl, 'rb') as f:
-            catalog = pickle.load(f)
-        bperp = get_bperp(catalog)
-        sensor = catalog['master']['sensor']['mission']
-        if sensor is None: sensor = catalog['slave']['sensor']['mission']
-        if sensor is None and catalog['master']['sensor']['imagingmode'] == "TOPS":
-            sensor = "S1X"
-        if sensor is None:
-            logger.warn("{} will be thrown out. Failed to extract sensor".format(ifg_prod))
-            continue
+        if os.path.exists(cb_pkl):
+            with open(cb_pkl, 'rb') as f:
+                catalog = pickle.load(f)
+            bperp = get_bperp(catalog)
+            sensor = catalog['master']['sensor']['mission']
+            if sensor is None: sensor = catalog['slave']['sensor']['mission']
+            if sensor is None and catalog['master']['sensor']['imagingmode'] == "TOPS":
+                sensor = "S1X"
+            if sensor is None:
+                logger.warn("{} will be thrown out. Failed to extract sensor".format(ifg_prod))
+                continue
+        else:
+            bperp = 0.
+            if re.search(r'^S1', ifg_prod): sensor = 'S1X'
+            else:
+                raise RuntimeError("Cannot determine sensor: {}".format(ifg_prod))
+        logger.info('sensor: {}'.format(sensor))
+
+         # get orbit direction to estimate heading
+        direction = ifg_met['direction']
+        logger.info('direction: {}'.format(direction))
 
         # set platform
-        platform = PLATFORMS.get(sensor, None)
+        platform = PLATFORMS.get(sensor, ifg_met.get('platform', None))
 
         # set no data value
         if S1_RE.search(sensor):
@@ -102,6 +113,7 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
         elif sensor == "SMAP": no_data = -9999.
         else:
             raise RuntimeError("Unknown sensor: {}".format(sensor))
+        logger.info('new sensor: {}'.format(sensor))
 
         # get wavelength, heading degree and center line UTC
         ifg_xml = os.path.join(ifg_prod, "fine_interferogram.xml")
@@ -137,11 +149,18 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
 
 
         # project unwrapped phase and correlation products to common region_of_interest bbox (ROI)
-        unw_vrt_in = os.path.join(ifg_prod, "merged", "filt_topophase.unw.geo.vrt")
-        unw_vrt_out = os.path.join(ifg_prod, "merged", "aligned.unw.vrt")
+        merged_dir = os.path.join(ifg_prod, "merged")
+        if os.path.exists(merged_dir):
+            unw_vrt_in = os.path.join(merged_dir, "filt_topophase.unw.geo.vrt")
+            unw_vrt_out = os.path.join(merged_dir, "aligned.unw.vrt")
+            cor_vrt_in = os.path.join(merged_dir, "phsig.cor.geo.vrt")
+            cor_vrt_out = os.path.join(merged_dir, "aligned.cor.vrt")
+        else:
+            unw_vrt_in = os.path.join(ifg_prod, "filt_topophase.unw.geo.vrt")
+            unw_vrt_out = os.path.join(ifg_prod, "aligned.unw.vrt")
+            cor_vrt_in = os.path.join(ifg_prod, "phsig.cor.geo.vrt")
+            cor_vrt_out = os.path.join(ifg_prod, "aligned.cor.vrt")
         gdal_translate(unw_vrt_in, unw_vrt_out, min_lat, max_lat, min_lon, max_lon, no_data, 2)
-        cor_vrt_in = os.path.join(ifg_prod, "merged", "phsig.cor.geo.vrt")
-        cor_vrt_out = os.path.join(ifg_prod, "merged", "aligned.cor.vrt")
         gdal_translate(cor_vrt_in, cor_vrt_out, min_lat, max_lat, min_lon, max_lon, no_data, 1)
 
         # get width and length of aligned/projected images and

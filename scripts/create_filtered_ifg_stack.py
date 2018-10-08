@@ -111,6 +111,8 @@ def main(input_json_file):
     if isinstance(input_json['subswath'], list): 
         subswath = input_json['subswath']
     else: subswath = [ input_json['subswath'] ]
+    subswath = [ int(i) for i in subswath ]
+    input_json['subswath'] = subswath
 
     # filter interferogram stack
     filt_info = filter_ifgs(products, min_lat, max_lat, min_lon, max_lon,
@@ -152,7 +154,10 @@ def main(input_json_file):
     platform = set()
     for i in ifg_list:
         p = ifg_info[i]['platform']
-        if p is not None: platform.add(p)
+        logger.info("platform for {}: {}".format(i, p))
+        if p is not None:
+            if not isinstance(p, list): p = [ p ]
+            platform = platform.union(p)
     platform = list(platform)
 
     # get endpoint configurations

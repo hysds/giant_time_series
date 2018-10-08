@@ -1,5 +1,5 @@
 {
-  "label":"GIAnT Time Series for stitched IFGs",
+  "label":"GIAnT - Create filtered stitched IFG stack",
   "submission_type":"individual",
   "allowed_accounts": [ "ops" ],
   "params" : [
@@ -8,13 +8,6 @@
       "from": "submitter",
       "type": "enum",
       "enumerables": ["aria", "grfn", "mem", "urgent-response", "dwr", "chevron", "floodmap"]
-    },
-    { 
-      "name": "sensor",
-      "from": "submitter",
-      "type": "enum",
-      "enumerables": ["S1", "SMAP"],
-      "default": "S1"
     },
     { 
       "name": "region_of_interest",

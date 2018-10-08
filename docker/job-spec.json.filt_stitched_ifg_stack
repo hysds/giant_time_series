@@ -1,12 +1,8 @@
 {
-  "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_stitched_ts_roi.sh",
+  "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_filtered_stitched_ifg_stack.sh",
   "params" : [
     { 
       "name": "project",
-      "destination": "context"
-    },
-    { 
-      "name": "sensor",
       "destination": "context"
     },
     { 

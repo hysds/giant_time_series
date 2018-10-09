@@ -1,8 +1,8 @@
 {
-  "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_ts_nsbas.sh",
+  "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_displacement_timeseries.sh",
   "params" : [
     { 
-      "name": "project",
+      "name": "method",
       "destination": "context"
     },
     {

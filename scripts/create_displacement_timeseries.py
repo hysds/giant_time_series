@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Create NSBAS-inversion displacement time series.
+Create displacement time series.
 """
 
 import os
@@ -47,18 +47,23 @@ def main(input_json_file):
         input_json = json.load(f)
     logger.info("input_json: {}".format(json.dumps(input_json, indent=2)))
 
-    # get project
-    project = input_json['project']
-
     # get ifg products
     products = input_json['products']
     ifg_stack_dir = products[0]
+
+    # get method
+    method = input_json['method']
+    if method not in ('sbas', 'nsbas'):
+        raise RuntimeError("Invalid method:{}".format(method))
+    logger.info("Using method {}-inversion to generate displacement time series.".format(method))
+
+    # set method-dependent vars
 
     # get time series prod
     match = ID_RE.search(ifg_stack_dir)
     if not match:
         raise RuntimeError("Failed to recognize filtered ifg stack: {}".format(ifg_stack_dir))
-    id = "displacement-time-series-nsbas_{}-{}".format(match.group(1), DATASET_VERSION)
+    id = "displacement-time-series-{}_{}-{}".format(method, match.group(1), DATASET_VERSION)
     logger.info("Product ID for version {}: {}".format(DATASET_VERSION, id))
 
     # get endpoint configurations
@@ -82,10 +87,18 @@ def main(input_json_file):
     check_call("pigz -d {}".format('PROC-STACK.h5.gz'), shell=True)
     shutil.move('PROC-STACK.h5', 'Stack')
 
-    # NSBASInvert.py to create time-series using partially coherent pixels approach
-    logger.info("Running NSBASInvert.py")
-    cpu_count = multiprocessing.cpu_count()
-    check_call("{}/NSBASInvertWrapper.py -nproc {}".format(BASE_PATH, cpu_count), shell=True)
+    # run inversion method
+    if method == "sbas":
+        # SBASInvert.py to create time-series using short baseline approach (least-squares)
+        logger.info("Running SBASInvert.py")
+        check_call("{}/SBASInvertWrapper.py".format(BASE_PATH), shell=True)
+        ts_file = "LS-PARAMS.h5"
+    elif method == "nsbas":
+        # NSBASInvert.py to create time-series using partially coherent pixels approach
+        logger.info("Running NSBASInvert.py")
+        cpu_count = multiprocessing.cpu_count()
+        check_call("{}/NSBASInvertWrapper.py -nproc {}".format(BASE_PATH, cpu_count), shell=True)
+        ts_file = "NSBAS-PARAMS.h5"
 
     # read in ifg stack metadata
     with open("{}.met.json".format(ifg_stack_dir)) as f:
@@ -97,8 +110,7 @@ def main(input_json_file):
     lats = filt_info['lats']
     lons = filt_info['lons']
 
-    # add lat, lon, and time datasets to NSBAS-PARAMS.h5 for THREDDS
-    ts_file = "NSBAS-PARAMS.h5"
+    # add lat, lon, and time datasets to time series product for THREDDS
     prep_tds(lats, lons, os.path.join("Stack", ts_file))
 
     # move back up
@@ -117,7 +129,7 @@ def main(input_json_file):
     os.chdir(prod_dir)
 
     # create browse image
-    call_noerr('gdal_translate HDF5:"NSBAS-PARAMS.h5"://rawts browse.tif -of GTiff -outsize 50% 50% -b 2')
+    call_noerr('gdal_translate HDF5:"{}"://rawts browse.tif -of GTiff -outsize 50% 50% -b 2'.format(ts_file))
     call_noerr("convert browse.tif browse.png")
     call_noerr("convert -resize 250x250 browse.png browse_small.png")
     call_noerr("rm -f browse.tif")

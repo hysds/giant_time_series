@@ -18,15 +18,15 @@ export PATH=$BIN_PATH:$GMT_HOME/bin:$PATH
 source $PGE_PATH/env/bin/activate
 
 echo "##########################################" 1>&2
-echo -n "Running SBAS-inversion displacement time series generation: " 1>&2
+echo -n "Running displacement time series generation: " 1>&2
 date 1>&2
-python $BIN_PATH/create_ts_sbas.py _context.json > create_ts_sbas.log 2>&1
+python $BIN_PATH/create_displacement_time_series.py _context.json > create_displacement_time_series.log 2>&1
 STATUS=$?
-echo -n "Finished running SBAS-inversion displacement time series generation: " 1>&2
+echo -n "Finished running displacement time series generation: " 1>&2
 date 1>&2
 if [ $STATUS -ne 0 ]; then
-  echo "Failed to run SBAS-inversion displacement time series generation." 1>&2
-  cat create_ts_sbas.log 1>&2
+  echo "Failed to run displacement time series generation." 1>&2
+  cat create_displacement_time_series.log 1>&2
   echo "{}"
   exit $STATUS
 fi

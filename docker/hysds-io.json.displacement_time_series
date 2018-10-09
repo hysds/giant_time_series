@@ -1,13 +1,13 @@
 {
-  "label":"GIAnT - Create Displacement Time Series - SBAS",
+  "label":"GIAnT - Create Displacement Time Series",
   "submission_type":"individual",
   "allowed_accounts": [ "ops" ],
   "params" : [
     { 
-      "name": "project",
+      "name": "method",
       "from": "submitter",
       "type": "enum",
-      "enumerables": ["aria", "grfn", "mem", "urgent-response", "dwr", "chevron", "floodmap"]
+      "enumerables": ["SBAS", "NSBAS"]
     },
     {
       "name":"localize_products",

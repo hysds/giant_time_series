@@ -1,5 +1,5 @@
 {
-  "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_displacement_timeseries.sh",
+  "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_displacement_time_series.sh",
   "params" : [
     { 
       "name": "method",

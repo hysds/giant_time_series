@@ -1,0 +1,17 @@
+{
+  "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_ts_nsbas.sh",
+  "params" : [
+    { 
+      "name": "project",
+      "destination": "context"
+    },
+    {
+      "name":"localize_products",
+      "destination":"localize"
+    }, 
+    {
+      "name":"products",
+      "destination":"context"
+    } 
+  ]
+}

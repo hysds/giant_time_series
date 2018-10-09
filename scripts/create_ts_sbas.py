@@ -12,6 +12,7 @@ import json
 import logging
 import shutil
 import pickle
+import multiprocessing
 from subprocess import check_call
 
 from giant_time_series.utils import (dataset_exists, prep_tds, call_noerr,

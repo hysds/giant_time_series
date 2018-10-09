@@ -284,7 +284,9 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
 
     # extract geocoded coords
     ifg_list = sorted(ifg_info)
-    lats, lons = get_geocoded_coords(ifg_info[ifg_list[0]]['cor_vrt_out'])
+    if len(ifg_list) > 0:
+        lats, lons = get_geocoded_coords(ifg_info[ifg_list[0]]['cor_vrt_out'])
+    else: lats = lons = None
     
     return {
         'center_lines_utc': center_lines_utc,

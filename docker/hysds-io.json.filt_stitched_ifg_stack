@@ -3,12 +3,6 @@
   "submission_type":"individual",
   "allowed_accounts": [ "ops" ],
   "params" : [
-    { 
-      "name": "project",
-      "from": "submitter",
-      "type": "enum",
-      "enumerables": ["aria", "grfn", "mem", "urgent-response", "dwr", "chevron", "floodmap"]
-    },
     {
       "name": "subswath",
       "from": "submitter",

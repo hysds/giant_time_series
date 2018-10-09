@@ -67,9 +67,6 @@ def main(input_json_file):
         input_json = json.load(f)
     logger.info("input_json: {}".format(json.dumps(input_json, indent=2)))
 
-    # get project
-    project = input_json['project']
-
     # get ifg products
     products = input_json['products']
 
@@ -290,7 +287,6 @@ def main(input_json_file):
         "sensor": sensor_name,
         "platform": platform,
         "spacecraftName": platform,
-        "tags": [ input_json['project'] ],
         "trackNumber": track,
         "swath": input_json['subswath'],
         "ifg_count": len(ifg_info),

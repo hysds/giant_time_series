@@ -1,0 +1,24 @@
+{
+  "label":"GIAnT - Create Displacement Time Series - SBAS",
+  "submission_type":"individual",
+  "allowed_accounts": [ "ops" ],
+  "params" : [
+    { 
+      "name": "project",
+      "from": "submitter",
+      "type": "enum",
+      "enumerables": ["aria", "grfn", "mem", "urgent-response", "dwr", "chevron", "floodmap"]
+    },
+    {
+      "name":"localize_products",
+      "from":"dataset_jpath:",
+      "type":"text",
+      "lambda" : "lambda met: get_partial_products(met['_id'],get_best_url(met['_source']['urls']), [met['_id']+'.met.json', 'PROC-STACK.h5.gz', 'sbas.xml'])"
+    }, 
+    {
+      "name":"products",
+      "type":"text",
+      "from":"dataset_jpath:_id"
+    } 
+  ]
+}

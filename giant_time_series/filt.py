@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 import isce
 from iscesys.Component.ProductManager import ProductManager as PM
 
-from .utils import get_bperp, gdal_translate
+from .utils import get_bperp, gdal_translate, get_geocoded_coords
 
 
 gdal.UseExceptions() # make GDAL raise python exceptions
@@ -281,9 +281,15 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
 
         # log success status
         logger.info('Added {} to final input stack'.format(ifg_prod))
+
+    # extract geocoded coords
+    ifg_list = sorted(ifg_info)
+    lats, lons = get_geocoded_coords(ifg_info[ifg_list[0]]['cor_vrt_out'])
     
     return {
         'center_lines_utc': center_lines_utc,
         'ifg_info': ifg_info,
         'ifg_coverage': ifg_coverage,
+        'lats': lats,
+        'lons': lons,
     }

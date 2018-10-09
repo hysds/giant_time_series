@@ -4,17 +4,41 @@ import logging
 import h5py
 import json
 import re
-import datetime
 import requests
 import numpy as np
 import scipy.spatial
 from osgeo import gdal, ogr
 from subprocess import check_call
+from datetime import datetime
+
+
+gdal.UseExceptions() # make GDAL raise python exceptions
 
 
 log_format = "[%(asctime)s: %(levelname)s/%(name)s/%(funcName)s] %(message)s"
 logging.basicConfig(format=log_format, level=logging.INFO)
 logger = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
+
+
+def get_geocoded_coords(vrt_file):
+    """Return geocoded coordinates of radar pixels."""
+
+    # extract geo-coded corner coordinates
+    ds = gdal.Open(vrt_file)
+    gt = ds.GetGeoTransform()
+    cols = ds.RasterXSize
+    rows = ds.RasterYSize
+    lon_arr = list(range(0, cols))
+    lat_arr = list(range(0, rows))
+    lons = np.empty((cols,))
+    lats = np.empty((rows,))
+    #logger.info("lon_arr: %s" % lon_arr)
+    #logger.info("lat_arr: %s" % lat_arr)
+    for py in lat_arr:
+        lats[py] = gt[3] + (py * gt[5])
+    for px in lon_arr:
+        lons[px] = gt[0] + (px * gt[1])
+    return lats, lons
 
 
 def get_geom(vrt_file):
@@ -67,7 +91,7 @@ def get_bounding_polygon(path):
     Get the minimum bounding region
     @param path - path to h5 file from which to read TS data
     '''
-    fle = h5py.File("./Stack/NSBAS-PARAMS.h5", "r")
+    fle = h5py.File(path, "r")
     #Read out the first data frame, lats vector and lons vector.
     data = fle["rawts"][0]
     lons = fle["lon"]
@@ -107,7 +131,7 @@ def write_dataset_json(prod_dir, id, region, starttime, endtime, version):
     @param endtime: endtime of the data
     '''
     met = {
-        'creation_timestamp': "%sZ" % datetime.datetime.utcnow().isoformat(),
+        'creation_timestamp': "%sZ" % datetime.utcnow().isoformat(),
         'version': version,
         'label': id,
         'location': {
@@ -178,3 +202,48 @@ def dataset_exists(es_url, es_index, id):
     total, id = check_dataset(es_url, es_index, id)
     if total > 0: return True
     return False
+
+
+def prep_tds(lats, lons, h5_file):
+    """Add lat, lon, and time info for TDS compatibility."""
+
+    #Open a file for append
+    h5f = h5py.File(h5_file, "r+")
+
+    #Calculate times from ordinals
+    dates = h5f.get("dates")
+    times = [int(datetime.fromordinal(int(item)).strftime("%s")) for item in dates]
+
+    #Create time, lat, and lon dataset
+    time = h5f.create_dataset("time",dates.shape, "d")
+    time[:] = times
+    lat = h5f.create_dataset("lat", lats.shape, "d")
+    lat[:] = lats
+    lon = h5f.create_dataset("lon", lons.shape, "d")
+    lon[:] = lons
+
+    #Create new dimension vars
+    dims = {}
+    time.attrs.create("axis", np.string_("T"))
+    time.attrs.create("units", np.string_("seconds since 1970-01-01 00:00:00 +0000"))
+    time.attrs.create("standard_name", np.string_("time"))
+    lat.attrs.create("help", np.string_("Latitude array"))
+    lon.attrs.create("help", np.string_("Longitude array"))
+
+    #Attach the new time dimension to the rawts and recons as scales
+    #In addition, attach lat and lon as scales
+    for dset_name in ["rawts", "recons", "error"]:
+        dset = h5f.get(dset_name)
+        if dset is None: continue
+        dset.dims.create_scale(time, "time")
+        dset.dims[0].attach_scale(time)
+        dset.dims.create_scale(lat, "lat")
+        dset.dims[1].attach_scale(lat)
+        dset.dims.create_scale(lon, "lon")
+        dset.dims[2].attach_scale(lon)
+
+        # add units attribute
+        dset.attrs.create("units", np.string_("mm"))
+
+    #Close file
+    h5f.close()

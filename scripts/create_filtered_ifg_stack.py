@@ -184,7 +184,7 @@ def main(input_json_file):
     m.update(" ".join(ifg_list).encode('utf-8'))
     roi_ref_hash = m.hexdigest()[0:5]
 
-    # get time series product ID
+    # get filtered ifg stack product ID
     center_lines_utc.sort()
     id = ID_TMPL.format(sensor=sensor, track=track,
                         startdt=center_lines_utc[0].strftime('%Y%m%dT%H%M%S'),
@@ -192,7 +192,7 @@ def main(input_json_file):
                         hash=roi_ref_hash, version=DATASET_VERSION)
     logger.info("Product ID for version {}: {}".format(DATASET_VERSION, id))
 
-    # check if time-series already exists
+    # check if dataset already exists
     if dataset_exists(es_url, es_index, id):
         logger.info("{} was previously generated and exists in GRQ database.".format(id))
         sys.exit(0)

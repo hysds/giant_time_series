@@ -110,6 +110,15 @@ def get_bounding_polygon(path):
     return pts
 
 
+def get_timesteps(path):
+    """Return timestep dates."""
+
+    h5f = h5py.File(path, 'r')
+    times = h5f.get('time')[:]
+    h5f.close()
+    return [datetime.fromtimestamp(i).isoformat('T') for i in times[:]]
+
+
 def get_bperp(catalog):
     '''
     Return perpendicular baseline.

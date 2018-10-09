@@ -7,7 +7,7 @@
       "name": "method",
       "from": "submitter",
       "type": "enum",
-      "enumerables": ["SBAS", "NSBAS"]
+      "enumerables": ["sbas", "nsbas"]
     },
     {
       "name":"localize_products",

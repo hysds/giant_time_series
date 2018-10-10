@@ -167,11 +167,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input_json_file", help="input JSON file")
     args = parser.parse_args()
+    work_dir = os.getcwd()
     try: main(args.input_json_file)
     except Exception as e:
-        with open('_alt_error.txt', 'w') as f:
+        with open(os.path.join(work_dir, '_alt_error.txt'), 'w') as f:
             f.write("%s\n" % str(e))
-        with open('_alt_traceback.txt', 'w') as f:
+        with open(os.path.join(work_dir, '_alt_traceback.txt'), 'w') as f:
             f.write("%s\n" % traceback.format_exc())
         raise
     sys.exit(0)

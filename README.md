@@ -1,7 +1,7 @@
 # GIAnT Time Series
 GIAnT time series processing of ISCEv2 interferograms
 
-![pipeline](https://user-images.githubusercontent.com/387300/46747512-664f3e80-cc66-11e8-99e1-db7d532a847b.png)
+![pipeline](https://user-images.githubusercontent.com/387300/46752714-ca77ff80-cc72-11e8-99f6-502eaa954670.png)
 
 ## Release
 - current release: v0.0.1

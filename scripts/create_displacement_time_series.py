@@ -138,8 +138,8 @@ def main(input_json_file):
     os.chdir(cwd)
 
     # create met json
-    met['dataset_type'] = "displacement-time-series"
-    met['product_type'] = "displacement-time-series"
+    met['dataset_type'] = "time-series"
+    met['product_type'] = "time-series"
     met_file = os.path.join(prod_dir, "{}.met.json".format(id))
     with open(met_file, 'w') as f:
         json.dump(met, f, indent=2)

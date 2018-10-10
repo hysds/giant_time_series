@@ -2,6 +2,10 @@
   "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_filtered_ifg_stack.sh",
   "params" : [
     { 
+      "name": "track",
+      "destination": "context"
+    },
+    { 
       "name": "subswath",
       "destination": "context"
     },

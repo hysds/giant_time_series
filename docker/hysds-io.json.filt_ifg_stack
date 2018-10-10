@@ -4,6 +4,12 @@
   "allowed_accounts": [ "ops" ],
   "params" : [
     { 
+      "name": "track",
+      "from": "submitter",
+      "type": "number",
+      "lambda": "lambda val: int(val)"
+    },
+    { 
       "name": "subswath",
       "from": "submitter",
       "type": "enum",

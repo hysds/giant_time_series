@@ -34,7 +34,6 @@ BASE_PATH = os.path.dirname(__file__)
 
 
 ID_TMPL = "filtered-ifg-stack_{sensor}-TN{track}-{startdt}Z-{enddt}Z-{hash}-{version}"
-TN_RE = re.compile(r'_TN(\d+)_')
 DATASET_VERSION = "v0.1"
 
 
@@ -111,11 +110,15 @@ def main(input_json_file):
     subswath = [ int(i) for i in subswath ]
     input_json['subswath'] = subswath
 
+    # get track
+    track = int(input_json['track'])
+    logger.info("Track: {}".format(track))
+
     # filter interferogram stack
     filt_info = filter_ifgs(products, min_lat, max_lat, min_lon, max_lon,
                             ref_lat, ref_lon, ref_width, ref_height, covth,
                             cohth, range_pixel_size, azimuth_pixel_size,
-                            inc, filt, netramp, gpsramp, subswath)
+                            inc, filt, netramp, gpsramp, subswath, track)
 
     # dump filter info
     with open('filt_info.pkl', 'wb') as f:
@@ -136,10 +139,6 @@ def main(input_json_file):
 
     # get sorted ifg date list
     ifg_list = sorted(ifg_info)
-
-    # get track number
-    track = int(TN_RE.search(ifg_info[ifg_list[0]]['product']).group(1))
-    logger.info("Track: {}".format(track))
 
     # get sensor
     sensor = ifg_info[ifg_list[0]]['sensor']

@@ -38,7 +38,8 @@ SENSORS = {
 
 def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
                 ref_lon, ref_width, ref_height, covth, cohth, range_pixel_size,
-                azimuth_pixel_size, inc, filt, netramp, gpsramp, subswath):
+                azimuth_pixel_size, inc, filt, netramp, gpsramp, subswath,
+                track):
     """Filter input interferogram products."""
 
     # align images
@@ -56,11 +57,16 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
         with open(ifg_met_file) as f:
             ifg_met = json.load(f)
 
+        # filter out product from different track
+        trackNumber = ifg_met['trackNumber']
+        if int(trackNumber) != int(track):
+            logger.info('Filtered out {}: unmatched track {}'.format(ifg_prod, trackNumber))
+            continue
+
         # filter out product from different subswath
         swath = ifg_met['swath'] if isinstance(ifg_met['swath'], list) else [ ifg_met['swath'] ]
         if set(swath) != set(subswath):
-            logger.info('Filtered out {}: unmatched subswath {}'.format(ifg_prod,
-                        ifg_met['swath']))
+            logger.info('Filtered out {}: unmatched subswath {}'.format(ifg_prod, swath))
             continue
 
         # extract sensing start and stop dates

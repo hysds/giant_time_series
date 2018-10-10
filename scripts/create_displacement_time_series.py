@@ -140,6 +140,7 @@ def main(input_json_file):
     # create met json
     met['dataset_type'] = "time-series"
     met['product_type'] = "time-series"
+    met['tags'] = method
     met_file = os.path.join(prod_dir, "{}.met.json".format(id))
     with open(met_file, 'w') as f:
         json.dump(met, f, indent=2)

@@ -13,6 +13,12 @@ GIAnT time series processing of ISCEv2 interferograms
    ```
    sds pkg import container-hysds_giant_time_series.<version>.sdspkg.tar
    ```
+1. Add datasets config for `filtered-ifg-stack` and `displacement-time-series` to your *datasets.json* templates 
+under *~/.sds/files* on `mozart`. Example config entries can be found [here](conf/datasets.json).
+1. On `mozart`, recreate the code/config bundles and ship:
+   ```
+   sds ship
+   ```
 
 ## Filtered Interferogram Stack
 ### Description

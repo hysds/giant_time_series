@@ -12,6 +12,6 @@ setup(
     install_requires=[
         "h5py", "numpy", "scipy", "gdal",
         "pytest", "scripttest", "mock", "flake8", "pylint",
-        "pytest-cov"
+        "pytest-cov", "pandas"
     ]
 )

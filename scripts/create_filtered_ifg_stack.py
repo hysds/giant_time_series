@@ -17,10 +17,11 @@ import h5py
 from subprocess import check_call
 from datetime import datetime
 from glob import glob
+import pandas as pd
 
 from giant_time_series.filt import filter_ifgs
 from giant_time_series.utils import (get_envelope, dataset_exists, call_noerr,
-write_dataset_json, get_holes)
+write_dataset_json, merge_intervals)
 from giant_time_series.plot import plot_stack
 
 import celeryconfig as conf
@@ -251,30 +252,46 @@ def main(input_json_file):
         check_call("pigz -f -9 {}".format(os.path.join(prod_dir, os.path.basename(i))), shell=True)
 
     # plot temporal connectivity
-    stack_png = "stack.browse.png"
-    stack_png_small = "stack.browse_small.png"
+    stack_png = "browse.png"
+    stack_png_small = "browse_small.png"
     plot_stack([(ifg_info[i]['master_date'], ifg_info[i]['slave_date']) for i in sorted(ifg_info)], stack_png)
     call_noerr("convert -resize 250x250 {} {}".format(stack_png, stack_png_small))
     shutil.move(stack_png, os.path.join(prod_dir, stack_png))
     shutil.move(stack_png_small, os.path.join(prod_dir, stack_png_small))
 
     # get holes
-    holes = get_holes(ifg_info)
+    start_dates = []
+    stop_dates = []
+    for i in sorted(ifg_info):
+        start_dates.append(ifg_info[i]['start_dt']) 
+        stop_dates.append(ifg_info[i]['stop_dt']) 
+    df = pd.DataFrame({
+        'start_date': start_dates,
+        'stop_date': stop_dates,
+    })
+    df.start_date = pd.to_datetime(df.start_date, dayfirst= True)
+    df.stop_date = pd.to_datetime(df.stop_date, dayfirst= True)
+    intervals = merge_intervals([[df['start_date'][i], df['stop_date'][i]] for i in range(len(df))])
+    connected = True if len(intervals) == 1 else False
+    logger.info("intervals: {}".format("\n".join(map(str, intervals))))
     gap_file = "gaps.txt"
     with open(gap_file, "w") as f:
-        f.write("Detected Gaps\n:")
-        for hole in holes:
-            msg = "[GAP] {0} - {1} Recommended fills: {2} with {3}\n".format(hole["start"],
-                hole["end"], hole["startScenes"], hole["endScenes"])
-            f.write(msg)
-            logger.info(msg)
+        if not connected:
+            f.write("Temporal gaps:")
+            it1, it2 = 0, 1
+            while it2 < len(intervals):
+                f.write("{} - {}\n".format(intervals[it1][1], intervals[it2][0]))
+                it1 += 1
+                it2 += 1
     shutil.move(gap_file, os.path.join(prod_dir, gap_file))
     
-    # create browse image
+    # get list of igram pngs
     png_files = glob("Figs/Igrams/*.png")
-    shutil.copyfile(png_files[0], os.path.join(prod_dir, "browse.png"))
-    call_noerr("convert -resize 250x250 {} {}".format(png_files[0],
-               os.path.join(prod_dir, "browse_small.png")))
+
+    # create animated gif
+    gif_file = "browse.gif"
+    call_noerr("convert -loop -0 -delay 100 Figs/Igrams/*.png {}".format(gif_file))
+    shutil.move(gif_file, prod_dir)
 
     # copy pngs
     for i in png_files: shutil.move(i, prod_dir)
@@ -314,6 +331,7 @@ def main(input_json_file):
         "timestep_count": len(timesteps),
         "timesteps": timesteps,
     }
+    if connected: met['tags'] = 'temporally_connected'
     met_file = os.path.join(prod_dir, "{}.met.json".format(id))
     with open(met_file, 'w') as f:
         json.dump(met, f, indent=2)

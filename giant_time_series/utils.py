@@ -272,22 +272,15 @@ def get_matching_scenes(met, time):
         match, met["slave_scenes"], met["master_scenes"]))
 
 
-def get_holes(ifg_info):
-    """Gets holes using Howard's algorithm for temporal hole detection."""
+def merge_intervals(intervals):
+    """Merge date range intervals and determine gaps."""
 
-    times = sorted([ifg_info[i] for i in ifg_info], key=lambda k: k["stop_dt"], reverse=True)
-    gaps = []
-    start = None
-    for i in times:
-        if start is None:
-            start = i
-            continue
-        elif i["stop_dt"] < start["start_dt"]:
-            gaps.append({"start":i["stop_dt"], "end":start["start_dt"],
-                         "startScenes":get_matching_scenes(i, i["stop_dt"]),
-                         "endScenes":get_matching_scenes(start, start["start_dt"])})
-            start = i
-        elif i["start_dt"] < start["start_dt"]:
-            start = i
-    gaps.reverse()
-    return gaps
+    s = sorted(intervals, key=lambda t: t[0])
+    m = 0
+    for  t in s:
+        if t[0] > s[m][1]:
+            m += 1
+            s[m] = t
+        else:
+            s[m] = [s[m][0], t[1]]
+    return s[:m+1]

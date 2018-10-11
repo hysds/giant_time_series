@@ -14,8 +14,24 @@ GIAnT time series processing of ISCEv2 interferograms
    sds pkg import container-hysds_giant_time_series.<version>.sdspkg.tar
    ```
 
-## Usage
-### Create filtered interferogram stack
+## Filtered Interferogram Stack
+### Description
+The filtered interferogram (`IFG`) stack dataset (`filtered-ifg-stack`) is primarily the HDF5 `RAW-STACK.h5` and 
+`PROC-STACK.h5` outputs of GIAnT's `PrepIgramStack.py` and `ProcessStack.py`, respectively. Prior to
+running these PGEs, a first-order filtering step is performed to filter out IFGs whose track and subswaths
+don't match those specified. Additionally, IFGs are filtered whose reference bounding box contains no data
+that pass the coherence threshold or which do not cover the region of interest.
+
+### Outputs
+- `RAW-STACK.h5.gz` - gzip-compressed HDF5 file of the filtered stack of IFGs
+- `PROC-STACK.h5.gz` - gzip-compressed HDF5 file of the filtered stack of IFGs with atmospheric and orbit corrections applied
+- `browse.png` - visual browse of temporal connectivity
+- `gaps.txt` - record of any temporal gaps detected in the stack
+- `create_filtered_ifg_stack.log` - verbose log which can be used to determine what IFGs were filtered and why
+- `filt_info.pkl` - pickle file containing IFG and filter information
+- `data.xml`, `sbas.xml` - other inputs needed by downstream displacement time series PGEs
+
+### Usage
 1. In `tosca` interface, draw bounding box on the region of interest.
 1. Facet on the `S1-IFG` dataset.
 1. Facet on the `track number`.
@@ -28,18 +44,15 @@ GIAnT time series processing of ISCEv2 interferograms
 1. Adjust other parameters accordingly.
 1. Click `Process Now`.
 
-### Create filtered stitched interferogram stack
-1. In `tosca` interface, draw bounding box on the region of interest.
-1. Facet on the `S1-IFG-STITCHED` dataset.
-1. Facet on the `track number`.
-1. Facet on the `dataset version`.
-1. Click on `On-Demand`.
-1. For `Action`, select `GIAnT - Create filtered stitched IFG stack [\<version\>].
-1. In the parameters section below, ensure `track` matches the track you initially faceted on.
-1. For `subswath`, select the value that matches the particular `S1-IFG-STITCHED` products you want to create a time series for. This ensures that `S1-IFG-STITCHED` products that stitch only subswaths 1 and 2 are filtered out if you desire to create a time series out of `S1-IFG-STITCHED` products that stitch all 3 subswaths.
-1. Populate `ref_point`.
-1. Adjust other parameters accordingly.
-1. Click `Process Now`.
+## Displacement Time Series
+### Description
+The displacement time series dataset (`displacement-time-series`) is primarily the 
+HDF5 `LS-PARAMS.h5` (for SBAS-inversion) and `NSBAS-PARAMS.h5` (for NSBAS-inversion)
+outputs of GIAnT's `SBASInvertWrapper.py` and `NSBASInvertWrapper.py`, respectively.
+
+### Outputs
+- `LS-PARAMS.h5.gz` or `NSBAS-PARAMS.h5.gz`- gzip-compressed HDF5 file of the displacement time series produced via the SBAS or NSBAS inversion method
+- `browse.png` - visual browse of initial time series step
 
 ### Create displacement time series
 1. In `tosca` interface, draw bounding box on the region of interest.

@@ -256,3 +256,38 @@ def prep_tds(lats, lons, h5_file):
 
     #Close file
     h5f.close()
+
+
+def get_matching_scenes(met, time):
+    """Get the master of slave scenes depending on which created the
+       input time (should be sensingStart or sensingStop time)."""
+
+    match = time.replace("-", "").replace(":", "")
+    for sset in [met["slave_scenes"][0],
+                 met["master_scenes"][0]]:
+        for scene in sset:
+            if match in scene:
+                return sset
+    raise Exception("Time {0} not found in master scenes ({1}) or slave scenes ({2})".format(
+        match, met["slave_scenes"], met["master_scenes"]))
+
+
+def get_holes(ifg_info):
+    """Gets holes using Howard's algorithm for temporal hole detection."""
+
+    times = sorted([ifg_info[i] for i in ifg_info], key=lambda k: k["stop_dt"], reverse=True)
+    gaps = []
+    start = None
+    for i in times:
+        if start is None:
+            start = i
+            continue
+        elif i["stop_dt"] < start["start_dt"]:
+            gaps.append({"start":i["stop_dt"], "end":start["start_dt"],
+                         "startScenes":get_matching_scenes(i, i["stop_dt"]),
+                         "endScenes":get_matching_scenes(start, start["start_dt"])})
+            start = i
+        elif i["start_dt"] < start["start_dt"]:
+            start = i
+    gaps.reverse()
+    return gaps

@@ -30,3 +30,6 @@ if [ $STATUS -ne 0 ]; then
   echo "{}"
   exit $STATUS
 fi
+
+# copy log to dataset
+cp create_filtered_ifg_stack.log filtered-ifg-stack*/

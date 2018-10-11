@@ -20,7 +20,8 @@ from glob import glob
 
 from giant_time_series.filt import filter_ifgs
 from giant_time_series.utils import (get_envelope, dataset_exists, call_noerr,
-write_dataset_json)
+write_dataset_json, get_holes)
+from giant_time_series.plot import plot_stack
 
 import celeryconfig as conf
 
@@ -249,6 +250,26 @@ def main(input_json_file):
         shutil.move(i, prod_dir)
         check_call("pigz -f -9 {}".format(os.path.join(prod_dir, os.path.basename(i))), shell=True)
 
+    # plot temporal connectivity
+    stack_png = "stack.browse.png"
+    stack_png_small = "stack.browse_small.png"
+    plot_stack([(ifg_info[i]['master_date'], ifg_info[i]['slave_date']) for i in sorted(ifg_info)], stack_png)
+    call_noerr("convert -resize 250x250 {} {}".format(stack_png, stack_png_small))
+    shutil.move(stack_png, os.path.join(prod_dir, stack_png))
+    shutil.move(stack_png_small, os.path.join(prod_dir, stack_png_small))
+
+    # get holes
+    holes = get_holes(ifg_info)
+    gap_file = "gaps.txt"
+    with open(gap_file, "w") as f:
+        f.write("Detected Gaps\n:")
+        for hole in holes:
+            msg = "[GAP] {0} - {1} Recommended fills: {2} with {3}\n".format(hole["start"],
+                hole["end"], hole["startScenes"], hole["endScenes"])
+            f.write(msg)
+            logger.info(msg)
+    shutil.move(gap_file, os.path.join(prod_dir, gap_file))
+    
     # create browse image
     png_files = glob("Figs/Igrams/*.png")
     shutil.copyfile(png_files[0], os.path.join(prod_dir, "browse.png"))

@@ -36,6 +36,9 @@ SENSORS = {
     "SMAP": "SMAP Sensor",
 }
 
+ID_DT_RE = re.compile(r'.*?_(\d{4}\d{2}\d{2})')
+
+
 def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
                 ref_lon, ref_width, ref_height, covth, cohth, range_pixel_size,
                 azimuth_pixel_size, inc, filt, netramp, gpsramp, subswath,
@@ -56,6 +59,14 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
         ifg_met_file = glob("{}/*.met.json".format(ifg_prod))[0]
         with open(ifg_met_file) as f:
             ifg_met = json.load(f)
+
+        # extract master and slave dates
+        match = ID_DT_RE.search(ifg_met["master_scenes"][0])
+        if not match: raise RuntimeError("Failed to extract master date.")
+        master_date = datetime.strptime(match.group(1), "%Y%m%d")
+        match = ID_DT_RE.search(ifg_met["slave_scenes"][0])
+        if not match: raise RuntimeError("Failed to extract slave date.")
+        slave_date = datetime.strptime(match.group(1), "%Y%m%d")
 
         # filter out product from different track
         trackNumber = ifg_met['trackNumber']
@@ -280,6 +291,8 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
             'unw_vrt_out': unw_vrt_out,
             'cor_vrt_in': cor_vrt_in,
             'cor_vrt_out': cor_vrt_out,
+            'master_date': master_date,
+            'slave_date': slave_date,
         }
 
         # track coverage

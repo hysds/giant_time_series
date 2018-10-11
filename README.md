@@ -63,11 +63,11 @@ outputs of GIAnT's `SBASInvertWrapper.py` and `NSBASInvertWrapper.py`, respectiv
 1. Click `Process Now`.
 
 ### Visualization
-- Panoply
-  1. Open HDF5 in `Panoply`: File->Open.
-  1. Double click on `rawts` (raw time series) or `recons` (reconstructed time series) variable.
-  1. Select `Create a georeferenced Longitude-Latitude plot`. Click on `Create`.
-  1. Zoom in to the region of interest. On MacOSX, hold down the `command` key while you click and drag a bounding box over the region of interest.
-  1. Click on the `Scale` tab and set `Scale Range Min.` to `-100` and `Max.` to `100`. You can play around with the values.
-  1. Click on the `Arrays` tab and cycle through the time slices by clicking the `up` arrow button.
-  ![panoply](https://user-images.githubusercontent.com/387300/46819763-666c3e80-cd39-11e8-8b0b-74325014b4a3.gif)
+#### Panoply
+1. Open HDF5 in `Panoply`: File->Open.
+1. Double click on `rawts` (raw time series) or `recons` (reconstructed time series) variable.
+1. Select `Create a georeferenced Longitude-Latitude plot`. Click on `Create`.
+1. Zoom in to the region of interest. On MacOSX, hold down the `command` key while you click and drag a bounding box over the region of interest.
+1. Click on the `Scale` tab and set `Scale Range Min.` to `-100` and `Max.` to `100`. You can play around with the values.
+1. Click on the `Arrays` tab and cycle through the time slices by clicking the `up` arrow button.
+![panoply](https://user-images.githubusercontent.com/387300/46819763-666c3e80-cd39-11e8-8b0b-74325014b4a3.gif)

@@ -3,9 +3,6 @@ GIAnT time series processing of ISCEv2 interferograms
 
 ![pipeline](https://user-images.githubusercontent.com/387300/46752714-ca77ff80-cc72-11e8-99f6-502eaa954670.png)
 
-## Release
-- current release: v0.0.1
-
 ## HySDS Cluster Installation
 1. Log into your `mozart` instance.
 1. Download HySDS package from the [latest release](https://github.com/hysds/giant_time_series/releases/latest) (replace \<version\>):

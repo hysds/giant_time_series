@@ -13,7 +13,7 @@ RUN set -ex \
  && sudo pip3 install virtualenv \
  && virtualenv --system-site-packages env \ 
  && source env/bin/activate \
- && pip install --process-dependency-links -e . \
+ && pip install -e . \
  && pytest --junit-xml=/tmp/pytest_unit.xml || : \
  && pytest --cov giant_time_series --cov-report=html:/tmp/coverage.html || : \
  && flake8 --exclude=env --exit-zero --statistics \

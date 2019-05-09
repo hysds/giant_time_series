@@ -1,0 +1,61 @@
+{
+  "command": "/home/ops/verdi/ops/giant_time_series/scripts/create_filtered_gunw_merged_stack.sh",
+  "params" : [
+    { 
+      "name": "track",
+      "destination": "context"
+    },
+    { 
+      "name": "region_of_interest",
+      "destination": "context"
+    },
+    { 
+      "name": "ref_point",
+      "destination": "context"
+    },
+    { 
+      "name": "ref_box_num_pixels",
+      "destination": "context"
+    },
+    { 
+      "name": "coherence_threshold",
+      "destination": "context"
+    },
+    { 
+      "name": "coverage_threshold",
+      "destination": "context"
+    },
+    { 
+      "name": "range_pixel_size",
+      "destination": "context"
+    },
+    { 
+      "name": "azimuth_pixel_size",
+      "destination": "context"
+    },
+    { 
+      "name": "inc",
+      "destination": "context"
+    },
+    { 
+      "name": "netramp",
+      "destination": "context"
+    },
+    { 
+      "name": "gpsramp",
+      "destination": "context"
+    },
+    { 
+      "name": "filt",
+      "destination": "context"
+    },
+    {
+      "name":"localize_products",
+      "destination":"localize"
+    }, 
+    {
+      "name":"products",
+      "destination":"context"
+    } 
+  ]
+}

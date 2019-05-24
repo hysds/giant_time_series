@@ -35,7 +35,7 @@ logger = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 BASE_PATH = os.path.dirname(__file__)
 
 
-ID_TMPL = "filtered-ifg-stack_{sensor}-TN{track}-{startdt}Z-{enddt}Z-{hash}-{version}"
+ID_TMPL = "filtered-gunw-merged-stack_{sensor}-TN{track}-{startdt}Z-{enddt}Z-{hash}-{version}"
 DATASET_VERSION = "v0.1"
 
 

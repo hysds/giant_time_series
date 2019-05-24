@@ -50,6 +50,19 @@ that pass the coherence threshold or which do not cover the region of interest.
 1. Adjust other parameters accordingly.
 1. Click `Process Now`.
 
+## Filtered GUNW Merged Stack
+### Usage
+1. In `tosca` interface, draw bounding box on the region of interest.
+1. Facet on the `S1-GUNW-MERGED` dataset.
+1. Facet on the `dataset version` (v2.0.2).
+1. Facet on the `track number`.
+1. Click on `On-Demand`.
+1. For `Action`, select `GIAnT - Create filtered GUNW-MERGED stack [\<version\>].
+1. In the parameters section below, ensure `track` matches the track you initially faceted on. This ensures that `S1-GUNW-MERGED` products for other tracksare filtered out in case the user failed to facet down to them.
+1. Populate `ref_point`.
+1. Adjust other parameters accordingly.
+1. Click `Process Now`.
+
 ## Displacement Time Series
 ### Description
 The displacement time series dataset (`displacement-time-series`) is primarily the 

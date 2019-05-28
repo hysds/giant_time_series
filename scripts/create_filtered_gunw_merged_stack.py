@@ -120,7 +120,7 @@ def main(input_json_file):
     filt_info = filter_ifgs(products, min_lat, max_lat, min_lon, max_lon,
                             ref_lat, ref_lon, ref_width, ref_height, covth,
                             cohth, range_pixel_size, azimuth_pixel_size,
-                            inc, filt, netramp, gpsramp, subswath, track)
+                            inc, filt, netramp, gpsramp, track)
 
     # dump filter info
     with open('filt_info.pkl', 'wb') as f:
@@ -327,7 +327,7 @@ def main(input_json_file):
         "platform": platform,
         "spacecraftName": platform,
         "trackNumber": track,
-        "swath": input_json['subswath'],
+        #"swath": input_json['subswath'],
         "ifg_count": len(ifg_info),
         "ifgs": [ifg_info[i]['product'] for i in sorted(ifg_info)],
         "timestep_count": len(timesteps),

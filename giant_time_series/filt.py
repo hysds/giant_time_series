@@ -41,7 +41,7 @@ ID_DT_RE = re.compile(r'.*?_(\d{4}\d{2}\d{2})')
 
 def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
                 ref_lon, ref_width, ref_height, covth, cohth, range_pixel_size,
-                azimuth_pixel_size, inc, filt, netramp, gpsramp, subswath,
+                azimuth_pixel_size, inc, filt, netramp, gpsramp,
                 track):
     """Filter input interferogram products."""
 
@@ -49,6 +49,7 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
     center_lines_utc = []
     ifg_info = {}
     ifg_coverage = {}
+    print('ifg_prods: {}'.format(ifg_prods))
     for prod_num, ifg_prod in enumerate(ifg_prods):
         logger.info('#' * 80)
         logger.info('Processing: {} ({} of {}) (current stack count: {})'.format(
@@ -74,11 +75,11 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
             logger.info('Filtered out {}: unmatched track {}'.format(ifg_prod, trackNumber))
             continue
 
-        # filter out product from different subswath
-        swath = ifg_met['swath'] if isinstance(ifg_met['swath'], list) else [ ifg_met['swath'] ]
-        if set(swath) != set(subswath):
-            logger.info('Filtered out {}: unmatched subswath {}'.format(ifg_prod, swath))
-            continue
+        ## filter out product from different subswath
+        #swath = ifg_met['swath'] if isinstance(ifg_met['swath'], list) else [ ifg_met['swath'] ]
+        #if set(swath) != set(subswath):
+        #    logger.info('Filtered out {}: unmatched subswath {}'.format(ifg_prod, swath))
+        #    continue
 
         # extract sensing start and stop dates
         sensingStarts = ifg_met['sensingStart'] if isinstance(ifg_met['sensingStart'], list) else [ ifg_met['sensingStart'] ]

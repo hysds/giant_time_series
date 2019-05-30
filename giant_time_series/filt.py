@@ -62,15 +62,15 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
             ifg_met = json.load(f)
 
         # extract master and slave dates
-        match = ID_DT_RE.search(ifg_met["master_scenes"][0])
+        match = ID_DT_RE.search(ifg_met["reference_scenes"][0])
         if not match: raise RuntimeError("Failed to extract master date.")
         master_date = datetime.strptime(match.group(1), "%Y%m%d")
-        match = ID_DT_RE.search(ifg_met["slave_scenes"][0])
+        match = ID_DT_RE.search(ifg_met["secondary_scenes"][0])
         if not match: raise RuntimeError("Failed to extract slave date.")
         slave_date = datetime.strptime(match.group(1), "%Y%m%d")
 
         # filter out product from different track
-        trackNumber = ifg_met['trackNumber']
+        trackNumber = ifg_met["track_number"]
         if int(trackNumber) != int(track):
             logger.info('Filtered out {}: unmatched track {}'.format(ifg_prod, trackNumber))
             continue
@@ -82,18 +82,19 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
         #    continue
 
         # extract sensing start and stop dates
-        sensingStarts = ifg_met['sensingStart'] if isinstance(ifg_met['sensingStart'], list) else [ ifg_met['sensingStart'] ]
+        sensingStarts = ifg_met["sensing_start"] if isinstance(ifg_met["sensing_start"], list) else [ ifg_met["sensing_start"]]
         sensingStarts.sort()
+        print("\nsensingStarts: {}\n".format(sensingStarts))
         match = DT_RE.search(sensingStarts[0])
         if not match: raise RuntimeError("Failed to extract start date.")
         start_dt = ''.join(match.groups()[:3])
-        start_time = datetime.strptime(sensingStarts[0], "%Y-%m-%dT%H:%M:%S")
-        sensingStops = ifg_met['sensingStop'] if isinstance(ifg_met['sensingStop'], list) else [ ifg_met['sensingStop'] ]
+        start_time = datetime.strptime(sensingStarts[0], "%Y-%m-%dT%H:%M:%S.%fZ")
+        sensingStops = ifg_met["sensing_stop"] if isinstance(ifg_met["sensing_stop"], list) else [ ifg_met["sensing_stop"] ]
         sensingStops.sort()
         match = DT_RE.search(sensingStops[-1])
         if not match: raise RuntimeError("Failed to extract stop date.")
         stop_dt = ''.join(match.groups()[:3])
-        stop_time = datetime.strptime(sensingStops[-1], "%Y-%m-%dT%H:%M:%S")
+        stop_time = datetime.strptime(sensingStops[-1], "%Y-%m-%dT%H:%M:%S.%fZ")
         logger.info('start_dt: {}'.format(start_dt))
         logger.info('stop_dt: {}'.format(stop_dt))
 
@@ -118,7 +119,7 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
         logger.info('sensor: {}'.format(sensor))
 
          # get orbit direction to estimate heading
-        direction = ifg_met['direction']
+        direction = ifg_met["orbit_direction"]
         logger.info('direction: {}'.format(direction))
 
         # set platform

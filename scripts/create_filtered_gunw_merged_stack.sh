@@ -1,12 +1,17 @@
 #!/bin/bash
 BASE_PATH=$(dirname "${BASH_SOURCE}")
-echo $BASE_PATH
 BASE_PATH=$(cd "${BASE_PATH}"; pwd)
-echo $BASE_PATH
 
 # set PGE path
 PGE_PATH=$(cd "${BASE_PATH}/.."; pwd)
 BIN_PATH=$PGE_PATH/scripts
+
+# move symlinked products
+mkdir orig_symlinked_inputs
+mv S1-GUNW-MERGED* orig_symlinked_inputs/
+cd orig_symlinked_inputs
+cp -aL S1-GUNW-MERGED* ..
+cd ..
 
 # source ISCE env
 export GMT_HOME=/usr/local/gmt

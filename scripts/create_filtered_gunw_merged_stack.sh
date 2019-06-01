@@ -39,5 +39,5 @@ if [ $STATUS -ne 0 ]; then
 fi
 
 # copy log to dataset
-cp create_filtered_gunw_merged_stack.log filtered-ifg-stack*/
+cp create_filtered_gunw_merged_stack.log filtered-gunw-merged-stack*/
 

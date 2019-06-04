@@ -8,6 +8,16 @@ echo $BASE_PATH
 PGE_PATH=$(cd "${BASE_PATH}/.."; pwd)
 BIN_PATH=$PGE_PATH/scripts
 
+# move symlinked products
+INPUT_DIR=orig_symlinked_inputs
+if [ ! -d "$INPUT_DIR" ]; then
+   mkdir $INPUT_DIR
+   mv filtered-gunw-merged-stack* $INPUT_DIR/
+   cd $INPUT_DIR
+   cp -aL filtered-gunw-merged-stack* ..
+   cd ..
+fi 
+
 # source ISCE env
 export GMT_HOME=/usr/local/gmt
 source $BIN_PATH/isce.sh

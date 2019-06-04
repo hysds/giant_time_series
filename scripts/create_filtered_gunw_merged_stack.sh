@@ -7,11 +7,14 @@ PGE_PATH=$(cd "${BASE_PATH}/.."; pwd)
 BIN_PATH=$PGE_PATH/scripts
 
 # move symlinked products
-mkdir orig_symlinked_inputs
-mv S1-GUNW-MERGED* orig_symlinked_inputs/
-cd orig_symlinked_inputs
-cp -aL S1-GUNW-MERGED* ..
-cd ..
+INPUT_DIR=orig_symlinked_inputs
+if [ ! -d "$INPUT_DIR" ]; then
+   mkdir $INPUT_DIR
+   mv S1-GUNW-MERGED* $INPUT_DIR/
+   cd $INPUT_DIR
+   cp -aL S1-GUNW-MERGED* ..
+   cd ..
+fi
 
 # source ISCE env
 export GMT_HOME=/usr/local/gmt

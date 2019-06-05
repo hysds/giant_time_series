@@ -277,6 +277,7 @@ def main(input_json_file):
     gap_file = "gaps.txt"
     with open(gap_file, "w") as f:
         if not connected:
+            full_coverage = False
             f.write("Temporal gaps:\n")
             it1, it2 = 0, 1
             while it2 < len(intervals):
@@ -284,6 +285,7 @@ def main(input_json_file):
                 it1 += 1
                 it2 += 1
         else:
+            full_coverage = True
             f.write("No temporal gaps")
     shutil.move(gap_file, os.path.join(prod_dir, gap_file))
     
@@ -332,6 +334,7 @@ def main(input_json_file):
         "ifgs": [ifg_info[i]['product'] for i in sorted(ifg_info)],
         "timestep_count": len(timesteps),
         "timesteps": timesteps,
+        "full_coverage": full_coverage
     }
     if connected: met['tags'] = 'temporally_connected'
     met_file = os.path.join(prod_dir, "{}.met.json".format(id))

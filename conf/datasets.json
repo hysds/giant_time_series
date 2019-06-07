@@ -22,6 +22,28 @@
         ]
       }
     },
+    {
+      "ipath": "ariamh::data/filtered-gunw-merged-stack",
+      "match_pattern": "/(?P<id>filtered-gunw-merged-stack_.+?-TN\\d+-.+-(?P<year>\\d{4})(?P<month>\\d{2})(?P<day>\\d{2})T\\d{6}Z-\\w{5}-v.+)$",
+      "alt_match_pattern": null,
+      "extractor": null,
+      "level": "l3",
+      "type": "gunw-merged-stack",
+      "publish": {
+        "s3-profile-name": "default",
+        "location": "s3://{{ DATASET_S3_ENDPOINT }}:80/{{ DATASET_BUCKET }}/datasets/{type}/{version}/{id}",
+        "urls": [
+          "http://{{ DATASET_BUCKET }}.{{ DATASET_S3_WEBSITE_ENDPOINT }}/datasets/{type}/{version}/{id}",
+          "s3://{{ DATASET_S3_ENDPOINT }}:80/{{ DATASET_BUCKET }}/datasets/{type}/{version}/{id}"
+        ]
+      },
+      "browse": {
+        "location": "davs://{{ DAV_USER }}:{{ DAV_PASSWORD }}@{{ DAV_SERVER }}/browse/{type}/{version}/{id}",
+        "urls": [
+          "https://{{ DAV_SERVER }}/browse/{type}/{version}/{id}"
+        ]
+      }
+    },
     { 
       "ipath": "ariamh::data/displacement-time-series",
       "match_pattern": "/(?P<id>displacement-time-series-.+_.+?-TN\\d+-.+-(?P<year>\\d{4})(?P<month>\\d{2})(?P<day>\\d{2})T\\d{6}Z-\\w{5}-v.+)$",

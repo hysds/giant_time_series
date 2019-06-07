@@ -29,7 +29,7 @@ logger = logging.getLogger(os.path.splitext(os.path.basename(__file__))[0])
 BASE_PATH = os.path.dirname(__file__)
 
 
-ID_RE = re.compile(r'filtered-ifg-stack_(.+)-v.+$')
+ID_RE = re.compile(r'filtered-gunw-merged-stack_(.+)-v.+$')
 DATASET_VERSION = "v0.1"
 
 

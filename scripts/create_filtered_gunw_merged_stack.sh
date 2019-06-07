@@ -1,12 +1,20 @@
 #!/bin/bash
 BASE_PATH=$(dirname "${BASH_SOURCE}")
-echo $BASE_PATH
 BASE_PATH=$(cd "${BASE_PATH}"; pwd)
-echo $BASE_PATH
 
 # set PGE path
 PGE_PATH=$(cd "${BASE_PATH}/.."; pwd)
 BIN_PATH=$PGE_PATH/scripts
+
+# move symlinked products
+INPUT_DIR=orig_symlinked_inputs
+if [ ! -d "$INPUT_DIR" ]; then
+   mkdir $INPUT_DIR
+   mv S1-GUNW-MERGED* $INPUT_DIR/
+   cd $INPUT_DIR
+   cp -aL S1-GUNW-MERGED* ..
+   cd ..
+fi
 
 # source ISCE env
 export GMT_HOME=/usr/local/gmt
@@ -34,5 +42,5 @@ if [ $STATUS -ne 0 ]; then
 fi
 
 # copy log to dataset
-cp create_filtered_gunw_merged_stack.log filtered-ifg-stack*/
+cp create_filtered_gunw_merged_stack.log filtered-gunw-merged-stack*/
 

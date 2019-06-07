@@ -13,7 +13,7 @@ GIAnT time series processing of ISCEv2 interferograms
    ```
    sds pkg import container-hysds_giant_time_series.<version>.sdspkg.tar
    ```
-1. Add datasets config for `filtered-ifg-stack` and `displacement-time-series` to your *datasets.json* templates 
+1. Add datasets config for `filtered-ifg-stack`, `filtered-gunw-merged-stack`, and `displacement-time-series` to your *datasets.json* templates 
 under *~/.sds/files* on `mozart`. Example config entries can be found [here](conf/datasets.json).
 1. On `mozart`, recreate the code/config bundles and ship:
    ```
@@ -22,7 +22,7 @@ under *~/.sds/files* on `mozart`. Example config entries can be found [here](con
 
 ## Filtered Interferogram Stack
 ### Description
-The filtered interferogram (`IFG`) stack dataset (`filtered-ifg-stack`) is primarily the HDF5 `RAW-STACK.h5` and 
+The filtered interferogram (`IFG`) stack datasets (`filtered-ifg-stack`) and (`filtered-gunw-merged-stack`) are primarily the HDF5 `RAW-STACK.h5` and 
 `PROC-STACK.h5` outputs of GIAnT's `PrepIgramStack.py` and `ProcessStack.py`, respectively. Prior to
 running these PGEs, a first-order filtering step is performed to filter out IFGs whose track and subswaths
 don't match those specified. Additionally, IFGs are filtered whose reference bounding box contains no data

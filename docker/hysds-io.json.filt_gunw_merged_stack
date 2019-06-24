@@ -83,7 +83,7 @@
       "name":"localize_products",
       "from":"dataset_jpath:",
       "type":"text",
-      "lambda" : "lambda met: get_partial_products(met['_id'],get_best_url(met['_source']['urls']),['fine_interferogram.xml',met['_id']+'.met.json','PICKLE/computeBaselines', 'merged/filt_topophase.unw.geo', 'merged/phsig.cor.geo', 'merged/filt_topophase.unw.geo.hdr', 'merged/phsig.cor.geo.hdr', 'merged/filt_topophase.unw.geo.xml', 'merged/phsig.cor.geo.xml', 'merged/filt_topophase.unw.geo.vrt', 'merged/phsig.cor.geo.vrt' ])"
+      "lambda" : "lambda met: get_partial_products(met['_id'], get_best_url(met['_source']['urls']), [met['_id']+'.met.json', 'filt_topophase.unw.geo', 'phsig.cor.geo', 'filt_topophase.unw.geo.xml', 'phsig.cor.geo.xml', 'filt_topophase.unw.geo.vrt', 'phsig.cor.geo.vrt' ])"
     }, 
     {
       "name":"products",

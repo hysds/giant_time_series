@@ -259,17 +259,17 @@ def prep_tds(lats, lons, h5_file):
 
 
 def get_matching_scenes(met, time):
-    """Get the master of slave scenes depending on which created the
+    """Get the main of subordinate scenes depending on which created the
        input time (should be sensingStart or sensingStop time)."""
 
     match = time.replace("-", "").replace(":", "")
-    for sset in [met["slave_scenes"][0],
-                 met["master_scenes"][0]]:
+    for sset in [met["subordinate_scenes"][0],
+                 met["main_scenes"][0]]:
         for scene in sset:
             if match in scene:
                 return sset
-    raise Exception("Time {0} not found in master scenes ({1}) or slave scenes ({2})".format(
-        match, met["slave_scenes"], met["master_scenes"]))
+    raise Exception("Time {0} not found in main scenes ({1}) or subordinate scenes ({2})".format(
+        match, met["subordinate_scenes"], met["main_scenes"]))
 
 
 def merge_intervals(intervals):

@@ -16,15 +16,15 @@ def plot_stack(ifg_dates, plt_file):
     "Plot stack."""
 
     fig1, axis = plt.subplots()
-    masters = []
-    slaves = []
+    mains = []
+    subordinates = []
     for index, ifg in enumerate(ifg_dates):
-        master_dt, slave_dt = ifg
-        axis.plot([master_dt, slave_dt], [index, index])
-        masters.append(master_dt)
-        slaves.append(slave_dt)
-    axis.scatter(masters, range(0, len(masters)), marker="o", label="Master")
-    axis.scatter(slaves, range(0, len(slaves)), marker="+", label="Slave")
+        main_dt, subordinate_dt = ifg
+        axis.plot([main_dt, subordinate_dt], [index, index])
+        mains.append(main_dt)
+        subordinates.append(subordinate_dt)
+    axis.scatter(mains, range(0, len(mains)), marker="o", label="Main")
+    axis.scatter(subordinates, range(0, len(subordinates)), marker="+", label="Subordinate")
     plt.title("Network Pair Coverage By Time")
     axis.set_xlabel('Time')
     axis.set_ylabel('Pairings Sorted By Start Time')

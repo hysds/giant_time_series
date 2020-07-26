@@ -254,7 +254,7 @@ def main(input_json_file):
     # plot temporal connectivity
     stack_png = "browse.png"
     stack_png_small = "browse_small.png"
-    plot_stack([(ifg_info[i]['master_date'], ifg_info[i]['slave_date']) for i in sorted(ifg_info)], stack_png)
+    plot_stack([(ifg_info[i]['main_date'], ifg_info[i]['subordinate_date']) for i in sorted(ifg_info)], stack_png)
     call_noerr("convert -resize 250x250 {} {}".format(stack_png, stack_png_small))
     shutil.move(stack_png, os.path.join(prod_dir, stack_png))
     shutil.move(stack_png_small, os.path.join(prod_dir, stack_png_small))

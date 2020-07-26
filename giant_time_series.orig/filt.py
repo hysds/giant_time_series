@@ -60,13 +60,13 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
         with open(ifg_met_file) as f:
             ifg_met = json.load(f)
 
-        # extract master and slave dates
-        match = ID_DT_RE.search(ifg_met["master_scenes"][0])
-        if not match: raise RuntimeError("Failed to extract master date.")
-        master_date = datetime.strptime(match.group(1), "%Y%m%d")
-        match = ID_DT_RE.search(ifg_met["slave_scenes"][0])
-        if not match: raise RuntimeError("Failed to extract slave date.")
-        slave_date = datetime.strptime(match.group(1), "%Y%m%d")
+        # extract main and subordinate dates
+        match = ID_DT_RE.search(ifg_met["main_scenes"][0])
+        if not match: raise RuntimeError("Failed to extract main date.")
+        main_date = datetime.strptime(match.group(1), "%Y%m%d")
+        match = ID_DT_RE.search(ifg_met["subordinate_scenes"][0])
+        if not match: raise RuntimeError("Failed to extract subordinate date.")
+        subordinate_date = datetime.strptime(match.group(1), "%Y%m%d")
 
         # filter out product from different track
         trackNumber = ifg_met['trackNumber']
@@ -102,9 +102,9 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
             with open(cb_pkl, 'rb') as f:
                 catalog = pickle.load(f)
             bperp = get_bperp(catalog)
-            sensor = catalog['master']['sensor']['mission']
-            if sensor is None: sensor = catalog['slave']['sensor']['mission']
-            if sensor is None and catalog['master']['sensor']['imagingmode'] == "TOPS":
+            sensor = catalog['main']['sensor']['mission']
+            if sensor is None: sensor = catalog['subordinate']['sensor']['mission']
+            if sensor is None and catalog['main']['sensor']['imagingmode'] == "TOPS":
                 sensor = "S1X"
             if sensor is None:
                 logger.warn("{} will be thrown out. Failed to extract sensor".format(ifg_prod))
@@ -291,8 +291,8 @@ def filter_ifgs(ifg_prods, min_lat, max_lat, min_lon, max_lon, ref_lat,
             'unw_vrt_out': unw_vrt_out,
             'cor_vrt_in': cor_vrt_in,
             'cor_vrt_out': cor_vrt_out,
-            'master_date': master_date,
-            'slave_date': slave_date,
+            'main_date': main_date,
+            'subordinate_date': subordinate_date,
         }
 
         # track coverage
